@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Time Tracker</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=3.1">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="logo">⏱</div>
+      <span class="logo-text">Personal Time Tracker</span>
+    </div>
+    <div class="header-right" id="header-right">
+      <button class="icon-btn" id="theme-toggle-btn" title="Toggle theme" aria-label="Toggle Theme">
+        <span id="theme-toggle-icon">🌙</span>
+      </button>
+      <div class="user-pill" id="user-pill" style="display: none;">
+        <span id="user-name-display"></span>
+        <button class="link-btn" id="logout-btn">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- AUTH VIEW -->
+  <main id="auth-view" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-subtitle" id="auth-subtitle">Sign in to track your time and view your calendar.</p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab-btn active" id="tab-login">Sign In</button>
+        <button type="button" class="auth-tab-btn" id="tab-register">Create Account</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="login-identifier">Email or Username</label>
+          <input type="text" id="login-identifier" class="form-control" placeholder="name@example.com" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="login-submit-btn">Sign In</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" style="display: none;">
+        <div class="form-group">
+          <label class="form-label" for="register-name">Full Name</label>
+          <input type="text" id="register-name" class="form-control" placeholder="Jane Doe" required autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="register-email">Email Address</label>
+          <input type="email" id="register-email" class="form-control" placeholder="name@example.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="register-password">Password</label>
+          <input type="password" id="register-password" class="form-control" placeholder="At least 8 characters" minlength="8" required autocomplete="new-password">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="register-tz">Timezone</label>
+          <select id="register-tz" class="form-control form-select" required>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="register-submit-btn">Create Account</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- APP VIEW -->
+  <main id="app-view" class="container" style="display: none;">
+
+    <!-- Timer Section -->
+    <section class="timer-section" id="timer-section">
+      <div class="timer-display">
+        <div class="timer-digits" id="today-total-time">00:00:00</div>
+        <div class="timer-label">tracked today</div>
+      </div>
+      <div class="timer-status" id="timer-status">
+        <span class="timer-sub-pill timer-start-pill" id="timer-start-time" style="display: none;"></span>
+        <div class="timer-status-center" id="timer-status-center">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="timer-status-text">Ready to track</span>
+        </div>
+        <span class="timer-sub-pill timer-diff-pill" id="timer-session-diff" style="display: none;"></span>
+      </div>
+      <div class="timer-controls">
+        <input type="text" id="timer-note-input" class="timer-input" placeholder="What are you working on?">
+        <button class="btn btn-primary" id="start-timer-btn">
+          ▶ Start
+        </button>
+        <button class="btn btn-stop" id="stop-timer-btn" style="display: none;">
+          ■ Stop
+        </button>
+      </div>
+    </section>
+
+    <!-- Dashboard: Calendar + Detail Panel -->
+    <div class="dashboard-grid">
+
+      <!-- Calendar -->
+      <section class="card calendar-card">
+        <div class="card-header">
+          <h2 class="card-title" id="calendar-month-title">October 2026</h2>
+          <div class="calendar-nav">
+            <button class="nav-btn" id="prev-month-btn" aria-label="Previous month">‹</button>
+            <button class="nav-btn today-btn" id="today-month-btn">Today</button>
+            <button class="nav-btn" id="next-month-btn" aria-label="Next month">›</button>
+          </div>
+        </div>
+
+        <div class="calendar-weekdays">
+          <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
+        </div>
+
+        <div class="calendar-grid" id="calendar-grid">
+          <!-- Days injected by JS -->
+        </div>
+
+        <div class="calendar-legend">
+          <span class="legend-item"><span class="dot dot-time"></span> Time tracked</span>
+          <span class="legend-item"><span class="dot dot-note"></span> Note</span>
+        </div>
+      </section>
+
+      <!-- Detail Panel (contextual: entries OR notes) -->
+      <section class="card detail-panel">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title" id="selected-date-title">Today</h2>
+            <span class="date-badge" id="selected-date-badge">Today</span>
+          </div>
+          <button class="btn btn-primary btn-sm" id="add-entry-btn">+ Add Entry</button>
+          <button class="btn btn-outline btn-sm" id="add-note-btn" style="display: none;">+ Add Note</button>
+        </div>
+
+        <!-- Daily total bar (shown for past/today) -->
+        <div class="total-bar" id="total-bar">
+          <span class="total-label">Total</span>
+          <strong class="total-value" id="daily-total-display">0m</strong>
+        </div>
+
+        <!-- Time Entries List (past/today) -->
+        <div id="entries-section">
+          <div class="item-list" id="entries-list">
+            <!-- Entries rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Planning Notes List (future) -->
+        <div id="notes-section" style="display: none;">
+          <div class="notes-banner">Planning notes don't count as tracked time</div>
+          <div class="item-list" id="notes-list">
+            <!-- Notes rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal: Add/Edit Time Entry -->
+  <div class="modal-overlay" id="entry-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="entry-modal-title">Add Time Entry</h3>
+        <button class="close-btn" id="close-entry-modal">&times;</button>
+      </div>
+      <form id="save-entry-form">
+        <div class="form-group">
+          <label class="form-label" for="entry-start-input">Start Time</label>
+          <input type="datetime-local" id="entry-start-input" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="entry-end-input">End Time</label>
+          <input type="datetime-local" id="entry-end-input" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="entry-note-modal-input">Note <span class="optional-tag">optional</span></label>
+          <input type="text" id="entry-note-modal-input" class="form-input" placeholder="What did you work on?">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancel-entry-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add/Edit Planning Note -->
+  <div class="modal-overlay" id="note-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="note-modal-title">Planning Note</h3>
+        <button class="close-btn" id="close-note-modal">&times;</button>
+      </div>
+      <form id="save-note-form">
+        <div class="form-group">
+          <label class="form-label" for="note-text-input">Note</label>
+          <textarea id="note-text-input" class="form-input" rows="4" placeholder="What are your plans for this day?" required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancel-note-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal modal-sm">
+      <h3 id="confirm-modal-title">Are you sure?</h3>
+      <p class="confirm-message" id="confirm-modal-message">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="confirm-modal-cancel">Cancel</button>
+        <button class="btn btn-danger" id="confirm-modal-proceed">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/static/js/app.js?v=3.1"></script>
+</body>
+</html>
