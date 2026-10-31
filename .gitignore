@@ -30,3 +30,8 @@ htmlcov/
 # Logs
 logs/
 *.log
+
+# Database & Vercel
+*.db
+*.sqlite3
+.vercel/

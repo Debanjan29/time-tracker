@@ -22,9 +22,12 @@ class Settings(BaseSettings):
     
     # Cookie & session settings
     COOKIE_NAME: str = "timelog_session"
-    COOKIE_SECURE: bool = False  # Set to True in production (requires HTTPS)
+    COOKIE_SECURE: bool = False  # Automatically enabled in production unless explicitly overridden
     COOKIE_SAMESITE: str = "lax"
     SESSION_EXPIRE_DAYS: int = 7
+
+    # CORS configuration for production (comma-separated list of origins)
+    ALLOWED_ORIGINS: str = ""
 
     # Pydantic Settings configuration: tells it to look for a .env file
     model_config = SettingsConfigDict(
@@ -32,6 +35,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore"
     )
+
+    def model_post_init(self, __context):
+        # In production on Vercel/HTTPS, default COOKIE_SECURE to True
+        if self.ENVIRONMENT.lower() == "production" and "COOKIE_SECURE" not in self.model_fields_set:
+            self.COOKIE_SECURE = True
 
 
 @lru_cache()

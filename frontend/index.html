@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Personal Time Tracker</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=3.1">
+  <link rel="stylesheet" href="/static/css/style.css?v=3.6">
 </head>
 <body>
 
@@ -19,7 +19,11 @@
         <span id="theme-toggle-icon">🌙</span>
       </button>
       <div class="user-pill" id="user-pill" style="display: none;">
-        <span id="user-name-display"></span>
+        <button type="button" class="user-pill-btn" id="open-profile-btn" title="Account & Profile settings">
+          <span class="user-avatar-icon">👤</span>
+          <span id="user-name-display"></span>
+          <span class="settings-gear-icon">⚙️</span>
+        </button>
         <button class="link-btn" id="logout-btn">Log out</button>
       </div>
     </div>
@@ -117,7 +121,17 @@
       <!-- Calendar -->
       <section class="card calendar-card">
         <div class="card-header">
-          <h2 class="card-title" id="calendar-month-title">October 2026</h2>
+          <div class="calendar-header-titles" id="calendar-header-titles">
+            <button type="button" class="calendar-title-btn" id="cal-month-btn" title="View all months">
+              <span id="cal-month-text">October</span>
+              <span class="btn-caret" id="cal-month-caret">▾</span>
+            </button>
+            <button type="button" class="calendar-title-btn" id="cal-year-btn" title="Choose year">
+              <span id="cal-year-text">2026</span>
+              <span class="btn-caret" id="cal-year-caret">▾</span>
+            </button>
+            <span id="calendar-month-title" style="display: none;">October 2026</span>
+          </div>
           <div class="calendar-nav">
             <button class="nav-btn" id="prev-month-btn" aria-label="Previous month">‹</button>
             <button class="nav-btn today-btn" id="today-month-btn">Today</button>
@@ -125,21 +139,141 @@
           </div>
         </div>
 
-        <div class="calendar-weekdays">
-          <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
+        <!-- Days View (Default) -->
+        <div id="calendar-days-view">
+          <div class="calendar-weekdays">
+            <div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div><div>Su</div>
+          </div>
+
+          <div class="calendar-grid" id="calendar-grid">
+            <!-- Days injected by JS -->
+          </div>
+
+          <div class="calendar-legend">
+            <span class="legend-item"><span class="dot dot-time"></span> Time tracked</span>
+            <span class="legend-item"><span class="dot dot-note"></span> Note</span>
+          </div>
         </div>
 
-        <div class="calendar-grid" id="calendar-grid">
-          <!-- Days injected by JS -->
+        <!-- Months View (12 Months Selector) -->
+        <div id="calendar-months-view" style="display: none;">
+          <div class="calendar-picker-grid" id="calendar-months-grid">
+            <!-- 12 months injected by JS -->
+          </div>
         </div>
 
-        <div class="calendar-legend">
-          <span class="legend-item"><span class="dot dot-time"></span> Time tracked</span>
-          <span class="legend-item"><span class="dot dot-note"></span> Note</span>
+        <!-- Years View (Decade / Multi-Year Selector) -->
+        <div id="calendar-years-view" style="display: none;">
+          <div class="calendar-picker-grid" id="calendar-years-grid">
+            <!-- 12 years injected by JS -->
+          </div>
         </div>
       </section>
 
-      <!-- Detail Panel (contextual: entries OR notes) -->
+      <!-- Daily To-Do Panel (Column 2 - Center) -->
+      <section class="card todo-card" id="todo-panel">
+        <div class="card-header todo-card-header">
+          <div>
+            <h2 class="card-title">Daily To-Do</h2>
+            <span class="date-badge" id="todo-date-badge">Today</span>
+          </div>
+          <div class="todo-header-actions">
+            <button type="button" class="btn-sound-config" id="open-sound-modal-btn" title="Choose reminder notification sound">
+              <span id="active-sound-icon">💎</span>
+              <span class="sound-config-name" id="active-sound-name">Crystal</span>
+              <span class="sound-config-arrow">▾</span>
+            </button>
+            <span class="todo-counter-pill" id="todo-counter-pill">0 done</span>
+          </div>
+        </div>
+
+        <!-- Digital Clock Banner -->
+        <div class="todo-digital-clock-banner">
+          <div class="digital-clock-main">
+            <div class="digital-clock-face">
+              <span class="clock-digits" id="digital-clock-time">00:00</span>
+              <span class="clock-sec" id="digital-clock-sec">:00</span>
+              <span class="clock-ampm" id="digital-clock-ampm">AM</span>
+            </div>
+            <div class="digital-clock-info">
+              <span class="clock-live-dot" title="Live clock synchronized with your timezone"></span>
+              <span class="clock-date-str" id="digital-clock-date">Today</span>
+              <span class="clock-divider">•</span>
+              <span class="clock-tz-str" id="digital-clock-tz">UTC</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily Progress Section -->
+        <div class="todo-progress-container" id="todo-progress-container">
+          <div class="todo-progress-info">
+            <span class="todo-progress-title">Daily Completion</span>
+            <span class="todo-progress-stat" id="todo-progress-stat">0%</span>
+          </div>
+          <div class="todo-progress-track">
+            <div class="todo-progress-fill" id="todo-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="todo-filter-bar">
+          <button type="button" class="todo-filter-btn active" data-filter="all">All <span class="filter-count" id="count-filter-all">0</span></button>
+          <button type="button" class="todo-filter-btn" data-filter="active">Pending <span class="filter-count" id="count-filter-active">0</span></button>
+          <button type="button" class="todo-filter-btn" data-filter="completed">Done <span class="filter-count" id="count-filter-completed">0</span></button>
+        </div>
+
+        <!-- Add Task Form -->
+        <form id="add-todo-form" class="todo-add-form">
+          <div class="todo-input-wrap">
+            <input type="text" id="todo-text-input" class="form-control todo-input" placeholder="Add a task for this day..." required autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm btn-todo-add" id="add-todo-btn" title="Add task">+</button>
+          </div>
+          <div class="todo-options-bar">
+            <label class="todo-daily-checkbox-label" title="Repeat this task every day until disabled">
+              <input type="checkbox" id="todo-is-daily-check">
+              <span class="daily-check-custom"></span>
+              <span class="daily-label-text">↻ Daily</span>
+            </label>
+            <div class="todo-reminder-picker-wrap" id="todo-reminder-pill-container" title="Set a reminder time for notification chime">
+              <input type="hidden" id="todo-reminder-time-input" value="">
+              <button type="button" class="todo-clock-pill-btn" id="todo-clock-pill-btn" aria-haspopup="dialog" aria-expanded="false" title="Click to choose reminder time on digital clock">
+                <span class="reminder-bell-icon">🔔</span>
+                <span class="todo-clock-pill-text" id="todo-clock-pill-text">Remind: Off</span>
+              </button>
+              <button type="button" class="btn-clear-pill-time" id="btn-clear-pill-time" title="Clear reminder" style="display: none;">&times;</button>
+              <button type="button" class="btn-preview-sound" id="preview-add-sound-btn" title="Preview notification music" aria-label="Preview sound">🎵</button>
+
+              <!-- Digital Clock Picker Popover for Add Task Form -->
+              <div class="digital-clock-popover" id="add-todo-clock-popover" role="dialog" aria-label="Set reminder time" style="display: none;">
+                <div class="dcp-popover-header">
+                  <span class="dcp-popover-title">⏰ Set Reminder Time</span>
+                  <button type="button" class="dcp-popover-close" id="close-add-clock-popover" aria-label="Close">&times;</button>
+                </div>
+                <div class="digital-clock-picker dcp-compact" id="add-digital-clock-picker">
+                  <!-- Rendered dynamically by JS -->
+                </div>
+                <div class="dcp-popover-footer">
+                  <button type="button" class="btn btn-ghost btn-xs" id="btn-clear-add-clock">Clear</button>
+                  <button type="button" class="btn btn-primary btn-xs" id="btn-apply-add-clock">Done</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Tasks list -->
+        <div class="todo-list-container">
+          <div class="item-list todo-items-list" id="todo-items-list">
+            <!-- Rendered by JS -->
+          </div>
+          <div id="todo-empty-state" class="empty-state todo-empty-state" style="display: none;">
+            <div class="todo-empty-icon">✓</div>
+            <p id="todo-empty-message">No tasks for this day.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detail Panel (Column 3 - Last) -->
       <section class="card detail-panel">
         <div class="card-header">
           <div>
@@ -165,7 +299,13 @@
 
         <!-- Planning Notes List (future) -->
         <div id="notes-section" style="display: none;">
-          <div class="notes-banner">Planning notes don't count as tracked time</div>
+          <div class="notes-info-card">
+            <div class="info-card-icon">💡</div>
+            <div class="info-card-content">
+              <strong>Future Planning</strong>
+              <p>Notes help plan future work and won't be counted as tracked time.</p>
+            </div>
+          </div>
           <div class="item-list" id="notes-list">
             <!-- Notes rendered by JS -->
           </div>
@@ -177,27 +317,87 @@
 
   <!-- Modal: Add/Edit Time Entry -->
   <div class="modal-overlay" id="entry-modal">
-    <div class="modal">
+    <div class="modal modal-lg">
       <div class="modal-header">
-        <h3 id="entry-modal-title">Add Time Entry</h3>
-        <button class="close-btn" id="close-entry-modal">&times;</button>
+        <div class="modal-title-wrap">
+          <span class="modal-icon">⏱</span>
+          <div>
+            <h3 id="entry-modal-title">Add Time Entry</h3>
+            <span class="modal-subtitle" id="entry-modal-subtitle">Log your actual work</span>
+          </div>
+        </div>
+        <button class="close-btn" id="close-entry-modal" aria-label="Close modal">&times;</button>
       </div>
       <form id="save-entry-form">
-        <div class="form-group">
-          <label class="form-label" for="entry-start-input">Start Time</label>
-          <input type="datetime-local" id="entry-start-input" class="form-input" required>
+        <!-- Hidden inputs preserving payload format -->
+        <input type="hidden" id="entry-start-input" required>
+        <input type="hidden" id="entry-end-input" required>
+
+        <!-- Date selector -->
+        <div class="form-group entry-date-group">
+          <label class="form-label" for="entry-date-picker">Log Date</label>
+          <div class="entry-date-row">
+            <span class="entry-date-icon">📅</span>
+            <input type="date" id="entry-date-picker" class="form-control entry-date-input" required>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="entry-end-input">End Time</label>
-          <input type="datetime-local" id="entry-end-input" class="form-input" required>
+
+        <!-- Digital Dual Clocks Grid -->
+        <div class="entry-clocks-grid">
+          <!-- Start Time Digital Clock -->
+          <div class="entry-clock-card">
+            <div class="entry-clock-header">
+              <span class="entry-clock-title">🟢 Start Time</span>
+              <span class="entry-clock-val" id="entry-start-val-display">09:00 AM</span>
+            </div>
+            <div class="digital-clock-picker entry-dcp" id="entry-start-clock-picker">
+              <!-- Rendered dynamically by JS -->
+            </div>
+          </div>
+
+          <!-- End Time Digital Clock -->
+          <div class="entry-clock-card">
+            <div class="entry-clock-header">
+              <span class="entry-clock-title">🔴 End Time</span>
+              <span class="entry-clock-val" id="entry-end-val-display">10:00 AM</span>
+            </div>
+            <div class="digital-clock-picker entry-dcp" id="entry-end-clock-picker">
+              <!-- Rendered dynamically by JS -->
+            </div>
+          </div>
         </div>
+
+        <!-- Quick Duration Presets & Live Duration Display -->
+        <div class="entry-duration-card" id="entry-duration-card">
+          <div class="entry-duration-summary">
+            <span class="entry-duration-label">⚡ Session Duration:</span>
+            <strong class="entry-duration-val" id="entry-calculated-duration">1h 00m</strong>
+          </div>
+          <div class="entry-duration-presets">
+            <span class="duration-presets-label">Quick Duration Presets:</span>
+            <div class="duration-chips">
+              <button type="button" class="duration-chip" data-mins="15">+15m</button>
+              <button type="button" class="duration-chip" data-mins="30">+30m</button>
+              <button type="button" class="duration-chip" data-mins="45">+45m</button>
+              <button type="button" class="duration-chip" data-mins="60">+1h</button>
+              <button type="button" class="duration-chip" data-mins="90">+1.5h</button>
+              <button type="button" class="duration-chip" data-mins="120">+2h</button>
+              <button type="button" class="duration-chip" data-mins="180">+3h</button>
+              <button type="button" class="duration-chip" data-mins="240">+4h</button>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="form-label" for="entry-note-modal-input">Note <span class="optional-tag">optional</span></label>
-          <input type="text" id="entry-note-modal-input" class="form-input" placeholder="What did you work on?">
+          <label class="form-label" for="entry-note-modal-input">
+            <span>Work Note</span>
+            <span class="optional-tag">optional</span>
+          </label>
+          <input type="text" id="entry-note-modal-input" class="form-control" placeholder="What did you work on? (e.g. API refactoring)">
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" id="cancel-entry-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="submit" class="btn btn-primary" id="save-entry-submit-btn">Save Entry</button>
         </div>
       </form>
     </div>
@@ -207,17 +407,187 @@
   <div class="modal-overlay" id="note-modal">
     <div class="modal">
       <div class="modal-header">
-        <h3 id="note-modal-title">Planning Note</h3>
-        <button class="close-btn" id="close-note-modal">&times;</button>
+        <div class="modal-title-wrap">
+          <span class="modal-icon">📝</span>
+          <div>
+            <h3 id="note-modal-title">Planning Note</h3>
+            <span class="modal-subtitle" id="note-modal-subtitle">Plans & tasks for this date</span>
+          </div>
+        </div>
+        <button class="close-btn" id="close-note-modal" aria-label="Close modal">&times;</button>
       </div>
       <form id="save-note-form">
         <div class="form-group">
-          <label class="form-label" for="note-text-input">Note</label>
-          <textarea id="note-text-input" class="form-input" rows="4" placeholder="What are your plans for this day?" required></textarea>
+          <label class="form-label" for="note-text-input">
+            <span>Note Content</span>
+            <span class="char-count" id="note-char-count">0 characters</span>
+          </label>
+          <textarea id="note-text-input" class="form-control note-textarea" rows="5" placeholder="What are your plans for this day?&#10;• Goal 1&#10;• Task to accomplish" required></textarea>
+          <div class="form-hint">
+            <span>Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to save</span>
+          </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" id="cancel-note-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="submit" class="btn btn-primary">Save Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Account & Profile Settings -->
+  <div class="modal-overlay" id="account-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">👤</span>
+          <div>
+            <h3>Account Settings</h3>
+            <span class="modal-subtitle">Manage profile, timezone & password</span>
+          </div>
+        </div>
+        <button class="close-btn" id="close-account-modal" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" id="modal-tab-profile">Profile</button>
+        <button type="button" class="modal-tab-btn" id="modal-tab-security">Security</button>
+      </div>
+
+      <!-- Tab Content: Profile -->
+      <div id="modal-profile-panel">
+        <div class="profile-info-card">
+          <div class="profile-avatar-large">👤</div>
+          <div class="profile-info-text">
+            <div class="profile-info-name" id="profile-card-name">User</div>
+            <div class="profile-info-meta">
+              <span class="user-badge" id="profile-card-username">@username</span>
+              <span class="profile-email" id="profile-card-email"></span>
+            </div>
+          </div>
+        </div>
+
+        <form id="update-profile-form">
+          <div class="form-group">
+            <label class="form-label" for="account-name-input">Display Name</label>
+            <input type="text" id="account-name-input" class="form-control" required minlength="1" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="account-tz-select">Timezone</label>
+            <select id="account-tz-select" class="form-control form-select" required></select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" id="cancel-account-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-profile-btn">Save Changes</button>
+          </div>
+        </form>
+
+        <div class="profile-danger-zone">
+          <div>
+            <div class="danger-zone-title">Delete Account</div>
+            <div class="danger-zone-desc">Permanently remove account & all logs.</div>
+          </div>
+          <button type="button" class="btn btn-danger btn-sm" id="delete-account-btn">Delete Account</button>
+        </div>
+      </div>
+
+      <!-- Tab Content: Security (Change Password) -->
+      <div id="modal-security-panel" style="display: none;">
+        <form id="change-password-form">
+          <div class="form-group">
+            <label class="form-label" for="account-cur-pw">Current Password</label>
+            <div class="input-password-wrapper">
+              <input type="password" id="account-cur-pw" class="form-control" placeholder="Enter current password" required>
+              <button type="button" class="password-toggle-btn" id="toggle-account-cur-pw" aria-label="Toggle password visibility">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="account-new-pw">New Password</label>
+            <div class="input-password-wrapper">
+              <input type="password" id="account-new-pw" class="form-control" placeholder="At least 8 characters" minlength="8" required>
+              <button type="button" class="password-toggle-btn" id="toggle-account-new-pw" aria-label="Toggle password visibility">👁</button>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" id="cancel-security-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-password-btn">Change Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Sound Options Gallery & Display -->
+  <div class="modal-overlay" id="sound-selector-modal">
+    <div class="modal modal-md">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">🎵</span>
+          <div>
+            <h3>Notification Sound Options</h3>
+            <span class="modal-subtitle">Preview and choose notification music for your daily reminders</span>
+          </div>
+        </div>
+        <button class="close-btn" id="close-sound-modal" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="sound-gallery-intro">
+        Listen to the different synthesized chime and tone options. The chosen sound will play when your daily task reminders fire.
+      </div>
+      <div class="sound-gallery-list" id="sound-gallery-list">
+        <!-- Injected dynamically by JS with interactive preview players -->
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-sound-modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="save-sound-modal">Save Preference</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Set / Edit Todo Reminder -->
+  <div class="modal-overlay" id="todo-reminder-modal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">🔔</span>
+          <div>
+            <h3>Task Reminder</h3>
+            <span class="modal-subtitle" id="reminder-modal-subtitle">Set reminder time & notification</span>
+          </div>
+        </div>
+        <button class="close-btn" id="close-reminder-modal" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="save-reminder-form">
+        <div class="form-group">
+          <label class="form-label" for="modal-reminder-task-text">Task</label>
+          <div id="modal-reminder-task-text" class="reminder-task-preview"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Remind me at</label>
+          <input type="hidden" id="modal-reminder-time-input" required>
+          <div class="digital-clock-picker modal-dcp" id="modal-digital-clock-picker">
+            <!-- Rendered dynamically by JS -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="modal-reminder-sound-select">Notification Sound</label>
+          <div class="reminder-sound-picker-row">
+            <select id="modal-reminder-sound-select" class="form-control form-select">
+              <option value="crystal">💎 Crystal Chime (Harmonious Bell)</option>
+              <option value="zen">🧘 Zen Singing Bowl (Deep & Calming)</option>
+              <option value="marimba">🪵 Warm Marimba (Playful & Upbeat)</option>
+              <option value="harp">✨ Celestial Harp (Shimmering Strum)</option>
+              <option value="digital">⚡ Digital Pulse (Modern & Crisp)</option>
+            </select>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-modal-preview-sound" title="Preview selected sound">▶ Listen</button>
+          </div>
+          <div class="form-hint">A small chime plays and a blinking red dot appears on the tab until you visit.</div>
+        </div>
+        <div class="modal-actions modal-actions-split">
+          <button type="button" class="btn btn-ghost btn-danger-text" id="btn-clear-reminder" style="display: none;">Remove</button>
+          <div class="modal-actions-right">
+            <button type="button" class="btn btn-ghost" id="cancel-reminder-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-reminder-btn">Save</button>
+          </div>
         </div>
       </form>
     </div>
@@ -235,9 +605,24 @@
     </div>
   </div>
 
+  <!-- Floating Active Reminder Banner -->
+  <div id="reminder-alert-banner" class="reminder-alert-banner" style="display: none;">
+    <div class="reminder-alert-content">
+      <div class="reminder-alert-pulse">🔔</div>
+      <div class="reminder-alert-body">
+        <div class="reminder-alert-title">Daily Task Reminder</div>
+        <div class="reminder-alert-text" id="reminder-alert-text">Time for your daily task!</div>
+      </div>
+    </div>
+    <div class="reminder-alert-actions">
+      <button type="button" class="btn btn-primary btn-sm" id="reminder-alert-done-btn">✓ Mark Done</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="reminder-alert-dismiss-btn">Dismiss</button>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="/static/js/app.js?v=3.1"></script>
+  <script src="/static/js/app.js?v=3.9"></script>
 </body>
 </html>

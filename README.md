@@ -63,7 +63,7 @@ Run the full automated test suite with pytest:
 ```powershell
 pytest
 ```
-*(All 38 tests covering authentication, time rules, calendar indicators, and security run in ~5 seconds)*
+*(All 51 tests covering authentication, time rules, calendar indicators, daily to-dos, and security run in ~6 seconds)*
 
 ---
 
@@ -108,7 +108,7 @@ time-log-tracker/
 │   └── js/app.js            # Client-side live timer, calendar, and modal controllers
 │
 ├── migrations/              # Alembic database migrations
-├── tests/                   # Automated pytest suite (38 tests)
+├── tests/                   # Automated pytest suite (51 tests)
 ├── .env.example             # Configuration template
 ├── vercel.json              # Vercel serverless deployment configuration
 ├── requirements.txt         # Project dependencies
@@ -117,24 +117,37 @@ time-log-tracker/
 
 ---
 
-## ☁️ Deployment (Vercel + Cloud PostgreSQL)
+## ☁️ Production Deployment on Vercel
 
-The application is structured to run in serverless environments like Vercel with zero persistent in-memory state:
+The application is structured to run seamlessly in serverless environments like Vercel with zero persistent in-memory state:
 
-### 1. Cloud PostgreSQL Setup
-Provision a free PostgreSQL database on providers such as **Neon.tech**, **Supabase**, or **Render**.
+### 1. Provision a Cloud PostgreSQL Database
+Provision a PostgreSQL database on a cloud provider such as:
+- **[Neon.tech](https://neon.tech/)** (Recommended for serverless — fast autoscaling & connection pooling)
+- **[Supabase](https://supabase.com/)**
+- **Vercel Postgres**
 
-### 2. Run Database Migrations
-Before deploying, apply the Alembic migrations against your production database:
+Copy the connection string (format: `postgresql://user:password@ep-host.region.neon.tech/neondb?sslmode=require`).
+*(Note: Both `postgres://` and `postgresql://` URIs are automatically normalized by the application to `postgresql+psycopg2://`)*.
+
+### 2. Configure Environment Variables in Vercel
+In your Vercel Project Dashboard under **Settings → Environment Variables**, add:
+- `DATABASE_URL`: Your cloud PostgreSQL connection string.
+- `AUTH_SECRET`: A secure random 64-character secret (generate with `python -c "import secrets; print(secrets.token_hex(32))"`).
+- `ENVIRONMENT`: `production`
+- `COOKIE_SECURE`: `true`
+- `ALLOWED_ORIGINS`: Optional, your Vercel deployment URL (e.g. `https://your-app.vercel.app`).
+
+### 3. Deploy
+You can deploy directly via Git or using the Vercel CLI:
+```bash
+# Deploy via Vercel CLI
+vercel --prod
+```
+Or connect your GitHub repository to Vercel for automatic continuous deployments on every push.
+
+Tables are automatically verified and initialized upon startup via FastAPI's `lifespan` handler. You can also run migrations manually if preferred:
 ```bash
 DATABASE_URL="postgresql://user:password@cloud-db-host/dbname" alembic upgrade head
 ```
 
-### 3. Deploy to Vercel
-1. Install Vercel CLI (`npm i -g vercel`) or push to a GitHub repository connected to Vercel.
-2. In the Vercel project settings, configure the following Environment Variables:
-   - `DATABASE_URL`: Your cloud PostgreSQL connection string.
-   - `AUTH_SECRET`: A secure random 64-character secret.
-   - `ENVIRONMENT`: `production`
-   - `COOKIE_SECURE`: `true`
-3. Run `vercel deploy` or trigger deployment via git push.

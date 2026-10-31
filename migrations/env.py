@@ -13,6 +13,7 @@ from app.db.base import Base
 from app.models.user import User  # noqa: F401
 from app.models.time_entry import TimeEntry  # noqa: F401
 from app.models.calendar_note import CalendarNote  # noqa: F401
+from app.models.todo import Todo, TodoCompletion  # noqa: F401
 
 config = context.config
 
@@ -27,7 +28,12 @@ target_metadata = Base.metadata
 
 def get_url() -> str:
     x_args = context.get_x_argument(as_dictionary=True)
-    return x_args.get("db_url") or config.get_main_option("sqlalchemy.url")
+    raw_url = x_args.get("db_url") or config.get_main_option("sqlalchemy.url") or ""
+    if raw_url.startswith("postgres://"):
+        raw_url = raw_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif raw_url.startswith("postgresql://") and not raw_url.startswith("postgresql+"):
+        raw_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return raw_url
 
 
 def run_migrations_offline() -> None:

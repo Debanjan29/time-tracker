@@ -5,16 +5,30 @@ from sqlalchemy.orm import sessionmaker, Session
 from app.core.config import settings
 
 # Engine configuration:
-# pool_pre_ping=True ensures stale or severed database connections are detected and reconnected,
-# which is essential for cloud/serverless deployments.
+# Normalize URL for cloud providers (Neon/Supabase/Render often supply postgres:// instead of postgresql://)
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+engine_kwargs = {
+    "pool_pre_ping": True,
+}
+
+if db_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
+    engine_kwargs["connect_args"] = connect_args
+else:
+    # Serverless PostgreSQL settings: avoid connection exhaustion across lambda invocations
+    engine_kwargs["pool_size"] = 5
+    engine_kwargs["max_overflow"] = 5
+    engine_kwargs["pool_recycle"] = 300
 
 engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    connect_args=connect_args
+    db_url,
+    **engine_kwargs
 )
 
 # SessionLocal is our factory for creating new database sessions
